@@ -1295,12 +1295,9 @@
                 <p>Conte-nos sobre seu projeto e receba uma proposta personalizada.</p>
             </div>
 
-            <form class="contact-form" id="contact-form" action="https://formsubmit.co/contato@mycleverbot.com.br,trpastro@gmail.com" method="POST">
-                <input type="hidden" name="_subject" value="Novo contato do site MyCleverbot">
-                <input type="hidden" name="_captcha" value="false">
-                <input type="hidden" name="_template" value="table">
-                <input type="hidden" name="_next" value="">
-                <input type="text" name="_honey" style="display:none">
+            <form class="contact-form" name="contact" method="POST" netlify netlify-honeypot="bot-field">
+                <input type="hidden" name="form-name" value="contact">
+                <p style="display:none;"><input name="bot-field"></p>
                 <div class="form-row">
                     <div class="form-group">
                         <label for="name">Nome <span class="required">*</span></label>
@@ -1616,16 +1613,16 @@
                 return;
             }
 
-            // Enviar formulário via fetch para FormSubmit
+            // Enviar formulário via Netlify Forms
             const formData = new FormData(contactForm);
 
-            fetch('https://formsubmit.co/ajax/contato@mycleverbot.com.br,trpastro@gmail.com', {
+            fetch('/', {
                 method: 'POST',
-                body: formData
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: new URLSearchParams(formData).toString()
             })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
+            .then(response => {
+                if (response.ok) {
                     formFeedback.className = 'form-feedback success';
                     formFeedback.textContent = 'Mensagem enviada com sucesso! Entraremos em contato em breve.';
                     contactForm.reset();
