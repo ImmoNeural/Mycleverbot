@@ -827,6 +827,51 @@
             font-size: 1.0625rem;
         }
 
+        .required {
+            color: #ef4444;
+        }
+
+        .error-message {
+            color: #ef4444;
+            font-size: 0.8125rem;
+            margin-top: 0.25rem;
+            min-height: 1.2em;
+        }
+
+        .form-group input.error,
+        .form-group textarea.error,
+        .form-group select.error {
+            border-color: #ef4444;
+        }
+
+        .form-group input.success,
+        .form-group textarea.success,
+        .form-group select.success {
+            border-color: #22c55e;
+        }
+
+        .form-feedback {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-radius: 8px;
+            text-align: center;
+            display: none;
+        }
+
+        .form-feedback.success {
+            display: block;
+            background: rgba(34, 197, 94, 0.1);
+            border: 1px solid #22c55e;
+            color: #22c55e;
+        }
+
+        .form-feedback.error {
+            display: block;
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid #ef4444;
+            color: #ef4444;
+        }
+
         /* Footer */
         footer {
             background: var(--dark);
@@ -1250,36 +1295,44 @@
                 <p>Conte-nos sobre seu projeto e receba uma proposta personalizada.</p>
             </div>
 
-            <form class="contact-form" action="#" method="POST">
+            <form class="contact-form" name="contact" method="POST" data-netlify="true" netlify-honeypot="bot-field">
+                <input type="hidden" name="form-name" value="contact">
+                <input type="hidden" name="subject" value="Novo contato do site MyCleverbot">
+                <p class="hidden" style="display:none;"><label>Não preencha: <input name="bot-field"></label></p>
                 <div class="form-row">
                     <div class="form-group">
-                        <label for="name">Nome</label>
+                        <label for="name">Nome <span class="required">*</span></label>
                         <input type="text" id="name" name="name" placeholder="Seu nome" required>
+                        <span class="error-message" id="name-error"></span>
                     </div>
                     <div class="form-group">
-                        <label for="email">E-mail</label>
+                        <label for="email">E-mail <span class="required">*</span></label>
                         <input type="email" id="email" name="email" placeholder="seu@email.com" required>
+                        <span class="error-message" id="email-error"></span>
                     </div>
                 </div>
                 <div class="form-row">
                     <div class="form-group">
-                        <label for="phone">Telefone</label>
-                        <input type="tel" id="phone" name="phone" placeholder="(00) 00000-0000">
+                        <label for="phone">Telefone <span class="required">*</span></label>
+                        <input type="tel" id="phone" name="phone" placeholder="(00) 00000-0000 ou +55 11 99999-9999" required>
+                        <span class="error-message" id="phone-error"></span>
                     </div>
                     <div class="form-group">
-                        <label for="service">Serviço de interesse</label>
-                        <select id="service" name="service">
+                        <label for="service">Serviço de interesse <span class="required">*</span></label>
+                        <select id="service" name="service" required>
                             <option value="">Selecione...</option>
                             <option value="saas">Portal SaaS</option>
                             <option value="chatbot">Chatbot Inteligente</option>
                             <option value="n8n">Automação N8N</option>
                             <option value="custom">Solução Customizada</option>
                         </select>
+                        <span class="error-message" id="service-error"></span>
                     </div>
                 </div>
                 <div class="form-group">
-                    <label for="message">Mensagem</label>
-                    <textarea id="message" name="message" placeholder="Descreva seu projeto ou necessidade..."></textarea>
+                    <label for="message">Mensagem <span class="required">*</span></label>
+                    <textarea id="message" name="message" placeholder="Descreva seu projeto ou necessidade (mínimo 5 palavras)..." required></textarea>
+                    <span class="error-message" id="message-error"></span>
                 </div>
                 <div class="form-submit">
                     <button type="submit" class="btn btn-primary">
@@ -1287,6 +1340,7 @@
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
                     </button>
                 </div>
+                <div class="form-feedback" id="form-feedback"></div>
             </form>
         </div>
     </section>
@@ -1426,6 +1480,185 @@
             el.style.transform = 'translateY(30px)';
             el.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
             observer.observe(el);
+        });
+
+        // Form validation
+        const contactForm = document.querySelector('.contact-form');
+        const formFeedback = document.getElementById('form-feedback');
+
+        function showError(fieldId, message) {
+            const field = document.getElementById(fieldId);
+            const errorSpan = document.getElementById(fieldId + '-error');
+            field.classList.add('error');
+            field.classList.remove('success');
+            errorSpan.textContent = message;
+        }
+
+        function showSuccess(fieldId) {
+            const field = document.getElementById(fieldId);
+            const errorSpan = document.getElementById(fieldId + '-error');
+            field.classList.remove('error');
+            field.classList.add('success');
+            errorSpan.textContent = '';
+        }
+
+        function validateName(name) {
+            if (!name || name.trim() === '') {
+                return 'Por favor, informe seu nome.';
+            }
+            return null;
+        }
+
+        function validateEmail(email) {
+            if (!email || email.trim() === '') {
+                return 'Por favor, informe seu e-mail.';
+            }
+            if (!email.includes('@') || !email.includes('.')) {
+                return 'Por favor, informe um e-mail válido (deve conter @).';
+            }
+            return null;
+        }
+
+        function validatePhone(phone) {
+            if (!phone || phone.trim() === '') {
+                return 'Por favor, informe seu telefone.';
+            }
+            // Remove caracteres permitidos: espaços, parênteses, hífens, +
+            const cleanPhone = phone.replace(/[\s\(\)\-\+\.]/g, '');
+            // Verifica se contém apenas números após limpeza
+            if (!/^\d+$/.test(cleanPhone)) {
+                return 'Telefone inválido. Use apenas números, +, (), - e espaços.';
+            }
+            // Verifica tamanho mínimo (8 dígitos) e máximo (15 dígitos para internacional)
+            if (cleanPhone.length < 8 || cleanPhone.length > 15) {
+                return 'Telefone deve ter entre 8 e 15 dígitos.';
+            }
+            return null;
+        }
+
+        function validateService(service) {
+            if (!service || service === '') {
+                return 'Por favor, selecione um serviço.';
+            }
+            return null;
+        }
+
+        function validateMessage(message) {
+            if (!message || message.trim() === '') {
+                return 'Por favor, escreva sua mensagem.';
+            }
+            const words = message.trim().split(/\s+/).filter(word => word.length > 0);
+            if (words.length < 5) {
+                return 'A mensagem deve ter pelo menos 5 palavras.';
+            }
+            return null;
+        }
+
+        function validateForm() {
+            let isValid = true;
+
+            const name = document.getElementById('name').value;
+            const nameError = validateName(name);
+            if (nameError) {
+                showError('name', nameError);
+                isValid = false;
+            } else {
+                showSuccess('name');
+            }
+
+            const email = document.getElementById('email').value;
+            const emailError = validateEmail(email);
+            if (emailError) {
+                showError('email', emailError);
+                isValid = false;
+            } else {
+                showSuccess('email');
+            }
+
+            const phone = document.getElementById('phone').value;
+            const phoneError = validatePhone(phone);
+            if (phoneError) {
+                showError('phone', phoneError);
+                isValid = false;
+            } else {
+                showSuccess('phone');
+            }
+
+            const service = document.getElementById('service').value;
+            const serviceError = validateService(service);
+            if (serviceError) {
+                showError('service', serviceError);
+                isValid = false;
+            } else {
+                showSuccess('service');
+            }
+
+            const message = document.getElementById('message').value;
+            const messageError = validateMessage(message);
+            if (messageError) {
+                showError('message', messageError);
+                isValid = false;
+            } else {
+                showSuccess('message');
+            }
+
+            return isValid;
+        }
+
+        contactForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            if (!validateForm()) {
+                formFeedback.className = 'form-feedback error';
+                formFeedback.textContent = 'Por favor, corrija os erros acima antes de enviar.';
+                return;
+            }
+
+            // Enviar formulário via fetch
+            const formData = new FormData(contactForm);
+
+            fetch('/', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: new URLSearchParams(formData).toString()
+            })
+            .then(response => {
+                if (response.ok) {
+                    formFeedback.className = 'form-feedback success';
+                    formFeedback.textContent = 'Mensagem enviada com sucesso! Entraremos em contato em breve.';
+                    contactForm.reset();
+                    // Limpar estilos de validação
+                    document.querySelectorAll('.form-group input, .form-group textarea, .form-group select').forEach(el => {
+                        el.classList.remove('success', 'error');
+                    });
+                } else {
+                    throw new Error('Erro no envio');
+                }
+            })
+            .catch(error => {
+                formFeedback.className = 'form-feedback error';
+                formFeedback.textContent = 'Erro ao enviar mensagem. Por favor, tente novamente.';
+            });
+        });
+
+        // Validação em tempo real
+        ['name', 'email', 'phone', 'service', 'message'].forEach(fieldId => {
+            const field = document.getElementById(fieldId);
+            field.addEventListener('blur', function() {
+                let error = null;
+                switch(fieldId) {
+                    case 'name': error = validateName(this.value); break;
+                    case 'email': error = validateEmail(this.value); break;
+                    case 'phone': error = validatePhone(this.value); break;
+                    case 'service': error = validateService(this.value); break;
+                    case 'message': error = validateMessage(this.value); break;
+                }
+                if (error) {
+                    showError(fieldId, error);
+                } else if (this.value.trim() !== '') {
+                    showSuccess(fieldId);
+                }
+            });
         });
     </script>
 </body>
