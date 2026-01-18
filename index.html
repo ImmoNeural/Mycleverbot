@@ -1642,12 +1642,16 @@
             .then(response => {
                 if (response.ok) {
                     formFeedback.className = 'form-feedback success';
-                    formFeedback.textContent = 'Mensagem enviada com sucesso! Entraremos em contato em breve.';
+                    formFeedback.textContent = 'Mensagem enviada com sucesso! Redirecionando...';
                     contactForm.reset();
                     // Limpar estilos de validação
                     document.querySelectorAll('.form-group input, .form-group textarea, .form-group select').forEach(el => {
                         el.classList.remove('success', 'error');
                     });
+                    // Redirecionar para página de obrigado
+                    setTimeout(() => {
+                        window.location.href = 'obrigado.html';
+                    }, 1000);
                 } else {
                     throw new Error('Erro no envio');
                 }
